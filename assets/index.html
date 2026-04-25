@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ciprian Stefan | Sovereign AI Architect</title>
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><polygon points=%2250,5 95,25 95,75 50,95 5,75 5,25%22 fill=%22%23020c06%22 stroke=%22%2300ff41%22 stroke-width=%226%22/><path d=%22M35 45 L50 35 L65 45 L65 65 L50 75 L35 65 Z%22 fill=%22%2300e5ff%22/></svg>">
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --matrix: #00ff41; --cyan: #00e5ff; --bg: #020c06; --border: rgba(0, 255, 65, 0.2);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; cursor: none !important; }
+    
+    body {
+      background-color: var(--bg); color: var(--matrix); font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh; display: flex; justify-content: center; align-items: flex-start;
+      padding: 4rem 1.5rem; overflow-x: hidden;
+    }
+
+    /* ── CUSTOM CURSOR ── */
+    #cursor {
+      position: fixed; width: 12px; height: 12px; background: var(--matrix);
+      border-radius: 50%; pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%); box-shadow: 0 0 15px var(--matrix);
+      transition: width 0.15s, height 0.15s, background 0.15s;
+    }
+    #cursor.big { width: 40px; height: 40px; background: rgba(0,255,65,0.1); border: 1px solid var(--matrix); }
+
+    /* ── BOOT SEQUENCE (FIREWALL) ── */
+    #firewall-screen {
+      position: fixed; inset: 0; z-index: 10000; background: #000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 1s ease, filter 1s ease, visibility 1s;
+    }
+    .firewall-text { font-family: 'Orbitron'; font-weight: 900; font-size: 1.5rem; letter-spacing: 8px; margin-bottom: 20px; text-shadow: 0 0 20px var(--matrix); }
+    .scan-btn {
+      padding: 15px 40px; background: transparent; border: 1px solid var(--matrix);
+      color: var(--matrix); font-family: 'Share Tech Mono'; font-size: 1rem;
+      letter-spacing: 4px; text-transform: uppercase; position: relative; overflow: hidden;
+      transition: 0.3s;
+    }
+    .scan-btn:hover { background: var(--matrix); color: #000; box-shadow: 0 0 30px var(--matrix); transform: scale(1.05); }
+
+    /* ── MAIN INTERFACE ── */
+    #matrix-canvas { position: fixed; inset: 0; z-index: 0; opacity: 0.4; pointer-events: none; }
+    .container { position: relative; z-index: 10; width: 100%; max-width: 650px; display: flex; flex-direction: column; gap: 2.5rem; opacity: 0; transform: translateY(20px); transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .container.active { opacity: 1; transform: translateY(0); }
+
+    /* ── HEADER ── */
+    header { text-align: center; }
+    .avatar-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto 1.5rem; }
+    .hex-ring { position: absolute; inset: -8px; border: 2px dashed var(--cyan); border-radius: 50%; animation: spin 8s linear infinite; opacity: 0.5; }
+    .profile-img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--matrix); filter: saturate(0) contrast(1.2); transition: 0.5s; }
+    .avatar-wrap:hover .profile-img { filter: saturate(1); box-shadow: 0 0 20px var(--matrix); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    h1 { font-family: 'Orbitron'; font-size: 2.2rem; letter-spacing: 6px; color: #fff; margin: 0; text-transform: uppercase; }
+    .tagline { color: var(--cyan); font-family: 'Rajdhani'; font-size: 1rem; font-weight: 600; letter-spacing: 4px; margin-top: 5px; }
+
+    /* ── LINKS ── */
+    .links-wrapper { display: flex; flex-direction: column; gap: 1rem; }
+    .link-btn {
+      display: flex; align-items: center; padding: 1.2rem;
+      background: rgba(0, 255, 65, 0.02); border: 1px solid var(--border);
+      text-decoration: none; color: var(--text); font-family: 'Rajdhani';
+      transition: 0.3s; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+      position: relative;
+    }
+    .link-btn::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px; background: var(--matrix); transform: scaleY(0); transition: 0.3s; transform-origin: bottom; }
+    .link-btn:hover { background: rgba(0, 255, 65, 0.08); border-color: var(--cyan); transform: translateX(10px); }
+    .link-btn:hover::before { transform: scaleY(1); }
+    
+    .link-icon { font-size: 1.4rem; margin-right: 20px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(0,255,65,0.1); border-radius: 4px; border: 1px solid var(--border); }
+    .link-info { display: flex; flex-direction: column; }
+    .link-label { font-size: 1.1rem; font-weight: 600; color: #fff; letter-spacing: 1px; }
+    .link-sub { font-size: 0.75rem; color: var(--muted); font-family: 'Share Tech Mono'; margin-top: 3px; }
+
+    .terminal-footer { border-top: 1px solid var(--border); padding-top: 1rem; font-size: 0.75rem; color: #2a6640; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+
+  <audio id="elite-voice" src="voce.mp3" preload="auto"></audio>
+
+  <div id="firewall-screen">
+    <div class="firewall-text" id="decrypt-text">FIREWALL LOCKED</div>
+    <button class="scan-btn" onclick="breachSystem()">Initiate Override</button>
+  </div>
+
+  <div id="cursor"></div>
+  <canvas id="matrix-canvas"></canvas>
+
+  <div class="container" id="main-ui">
+    <header>
+      <div class="avatar-wrap">
+        <div class="hex-ring"></div>
+        <img src="https://github.com/Ciprian-LocalPulse.png" class="profile-img">
+      </div>
+      <h1 id="glitch-name">CIPRIAN STEFAN</h1>
+      <div class="tagline">ARCHITECT OF SOVEREIGN AI</div>
+    </header>
+
+    <main class="links-wrapper">
+      <a href="https://ciprian-localpulse.github.io/my-sponsorship-page/" target="_blank" class="link-btn">
+        <div class="link-icon">🛡️</div>
+        <div class="link-info"><span class="link-label">Sponsor Sovereign Research</span><span class="link-sub">Fund autonomous infrastructure</span></div>
+      </a>
+      <a href="https://dev.to/ciprianlocalpulse" target="_blank" class="link-btn">
+        <div class="link-icon">📝</div>
+        <div class="link-info"><span class="link-label">Architecture of Autonomy</span><span class="link-sub">Zero-dependency essays</span></div>
+      </a>
+      <a href="https://github.com/Ciprian-LocalPulse" target="_blank" class="link-btn">
+        <div class="link-icon">💻</div>
+        <div class="link-info"><span class="link-label">Source Repositories</span><span class="link-sub">GitHub // System core</span></div>
+      </a>
+      <a href="https://www.linkedin.com/in/stefan-ciprian-3885b6402/" target="_blank" class="link-btn">
+        <div class="link-icon">💼</div>
+        <div class="link-info"><span class="link-label">Strategic Network</span><span class="link-sub">LinkedIn connections</span></div>
+      </a>
+      <a href="https://cal.com/ciprian-stefan-plesca" target="_blank" class="link-btn">
+        <div class="link-icon">📅</div>
+        <div class="link-info"><span class="link-label">Architecture Consultation</span><span class="link-sub">1-on-1 sovereign design</span></div>
+      </a>
+      <a href="https://ciprianstefanplesca.gumroad.com/" target="_blank" class="link-btn">
+        <div class="link-icon">🛠️</div>
+        <div class="link-info"><span class="link-label">Enterprise UI Kits</span><span class="link-sub">Gumroad premium assets</span></div>
+      </a>
+      <a href="mailto:contact@localpulse.pro" class="link-btn">
+        <div class="link-icon">✉️</div>
+        <div class="link-info"><span class="link-label">Encrypted Comms</span><span class="link-sub">contact@localpulse.pro</span></div>
+      </a>
+    </main>
+
+    <footer class="terminal-footer">
+      <span>SYS_STATE: SOVEREIGN</span>
+      <span>JS_DEPS: 0</span>
+    </footer>
+  </div>
+
+  <script>
+    // ── 1. LOGICA DE BREACH (AUDIO + UI) ──
+    function breachSystem() {
+      const btn = document.querySelector('.scan-btn');
+      const text = document.getElementById('decrypt-text');
+      btn.style.display = 'none';
+      
+      // Efect de decriptare text
+      let ticks = 0;
+      const interval = setInterval(() => {
+        text.textContent = Math.random().toString(36).substring(2, 12).toUpperCase();
+        ticks++;
+        if(ticks > 10) {
+          clearInterval(interval);
+          text.textContent = "ACCESS GRANTED";
+          text.style.color = "var(--cyan)";
+          executeBoot();
+        }
+      }, 50);
+    }
+
+   function executeBoot() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const t = ctx.currentTime;
+
+      // 1. FAZA MECANICĂ: "Deschiderea Seifului" (3 click-uri high-tech, ultra-scurte)
+      for(let i = 0; i < 3; i++) {
+        let oscClick = ctx.createOscillator();
+        let gainClick = ctx.createGain();
+        oscClick.type = 'square'; // Sunet metalic, digital
+        oscClick.frequency.value = 2500 + (i * 800); // Frecvență care urcă rapid
+        
+        gainClick.gain.setValueAtTime(0, t + i * 0.1);
+        gainClick.gain.linearRampToValueAtTime(0.05, t + i * 0.1 + 0.01);
+        gainClick.gain.linearRampToValueAtTime(0, t + i * 0.1 + 0.04);
+        
+        oscClick.connect(gainClick); gainClick.connect(ctx.destination);
+        oscClick.start(t + i * 0.1); oscClick.stop(t + i * 0.1 + 0.05);
+      }
+
+      // 2. FAZA SUBCONȘTIENT (ASMR / 528Hz Solfeggio Chime)
+      const baseFreq = 528; // Frecvența de calmare / "Miracle Frequency"
+      const chimeStart = t + 0.35; // Începe fix după ce "seiful" s-a deschis
+      
+      // Creăm un acord bogat (Frecvența de bază + armonici pentru spațialitate)
+      [1, 1.5, 2, 2.01].forEach(mult => {
+        let oscChime = ctx.createOscillator();
+        let gainChime = ctx.createGain();
+        
+        oscChime.type = 'sine'; // Undă pură, fină, "clinket" de sticlă/cristal
+        oscChime.frequency.value = baseFreq * mult;
+        
+        // Efect de reverberație lungă (Fade-out ASMR)
+        gainChime.gain.setValueAtTime(0, chimeStart);
+        gainChime.gain.linearRampToValueAtTime(0.15 / mult, chimeStart + 0.1); // Atac blând
+        gainChime.gain.exponentialRampToValueAtTime(0.001, chimeStart + 4); // Se stinge încet în 4 secunde
+        
+        oscChime.connect(gainChime); gainChime.connect(ctx.destination);
+        oscChime.start(chimeStart); oscChime.stop(chimeStart + 4);
+      });
+
+      // 3. VOCEA TA REALA (Opțional, dacă ai adăugat fișierul voce.mp3)
+      const voice = document.getElementById('elite-voice');
+      if(voice) voice.play().catch(() => {}); // Ignoră eroarea dacă nu ai pus încă fișierul
+
+      // 4. TRANZIȚIA VIZUALĂ
+      setTimeout(() => {
+        const firewall = document.getElementById('firewall-screen');
+        firewall.style.opacity = '0';
+        firewall.style.filter = 'blur(10px)';
+        document.getElementById('main-ui').classList.add('active');
+        setTimeout(() => { firewall.style.visibility = 'hidden'; }, 1000);
+      }, 500);
+    }
+
+    // ── 2. CURSOR & HOVER EFFECTS ──
+    const cur = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+    });
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', () => cur.classList.add('big'));
+      el.addEventListener('mouseleave', () => cur.classList.remove('big'));
+    });
+
+    // ── 3. MATRIX RAIN BACKGROUND ──
+    const c = document.getElementById('matrix-canvas');
+    const x = c.getContext('2d');
+    let w, h, drops;
+    function initMatrix() {
+      w = c.width = window.innerWidth;
+      h = c.height = window.innerHeight;
+      drops = Array(Math.floor(w/20)).fill(0);
+    }
+    function draw() {
+      x.fillStyle = 'rgba(2, 12, 6, 0.1)';
+      x.fillRect(0, 0, w, h);
+      x.fillStyle = '#00ff41';
+      x.font = '14px monospace';
+      drops.forEach((y, i) => {
+        const char = String.fromCharCode(0x30A0 + Math.random() * 96);
+        x.fillText(char, i * 20, y);
+        if (y > h && Math.random() > 0.97) drops[i] = 0;
+        else drops[i] += 20;
+      });
+    }
+    initMatrix(); setInterval(draw, 50);
+    window.addEventListener('resize', initMatrix);
+  </script>
+</body>
+</html>
